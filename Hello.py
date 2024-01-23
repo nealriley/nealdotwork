@@ -24,28 +24,25 @@ def run():
         page_icon="👋",
     )
 
-    st.write("# Welcome to Streamlit! 👋")
 
-    st.sidebar.success("Select a demo above.")
+    # get query string param "page" from url
+    page = st.query_params["page"] if "page" in st.query_params else "home"
+    # confirm that query is not trying to change to any other folder except current one
+    if "/" not in page:
+      if page != "home":
+          # attempt to read file from docs folder with the same name as page
+          # if it doesn't exist, throw an error
+          try:
+              st.markdown(open(f"docs/{page}.md").read())
+          except FileNotFoundError:
+              st.error(f"404 - Page `{page}` not found")
+          # Convert the page to an int, increment by one, and load the current url with a new query param (the new page id)
+          # This will cause the page to reload with the new page id
+          page_id = int(page) + 1
+          st.markdown(f"[Next](/?page={page_id})")
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
-
+      else:
+          st.write("This is the home page")
 
 if __name__ == "__main__":
     run()
