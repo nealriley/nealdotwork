@@ -20,8 +20,10 @@ LOGGER = get_logger(__name__)
 
 def run():
     st.set_page_config(
-        page_title="Hello",
+        page_title="neal.work",
         page_icon="👋",
+        layout="wide",
+        
     )
 
 
@@ -39,7 +41,11 @@ def run():
           # Convert the page to an int, increment by one, and load the current url with a new query param (the new page id)
           # This will cause the page to reload with the new page id
           page_id = int(page) + 1
-          st.markdown(f"[Next](/?page={page_id})")
+          st.markdown(f"""
+            <a href=/?page={page_id} target = "_self"> 
+                Next
+            </a>
+          """, unsafe_allow_html=True)
 
       else:
           st.write("This is the home page")
