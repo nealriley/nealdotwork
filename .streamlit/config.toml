@@ -1,0 +1,11 @@
+[theme]
+base="light"
+font="sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"
+showSidebarNavigation = false

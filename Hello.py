@@ -48,7 +48,8 @@ def run():
           """, unsafe_allow_html=True)
 
       else:
-          st.write("This is the home page")
+          st.markdown(f""" ## Welcome, take a look around            
+""")
 
 if __name__ == "__main__":
     run()
