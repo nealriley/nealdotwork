@@ -21,7 +21,7 @@ LOGGER = get_logger(__name__)
 def run():
     st.set_page_config(
         page_title="neal.work",
-        page_icon="👋",
+        page_icon="random",
         layout="wide",
     )
     hide_decoration_bar_style = '''
