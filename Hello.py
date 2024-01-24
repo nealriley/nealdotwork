@@ -48,7 +48,7 @@ def run():
           """, unsafe_allow_html=True)
 
       else:
-          st.markdown(f""" ## Welcome, take a look around            
+          st.markdown(f""" ## Welcome            
 """)
 
 if __name__ == "__main__":
