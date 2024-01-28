@@ -4,4 +4,5 @@ pandas
 pydeck
 streamlit
 markdown
-ollama
+requests
+openai
