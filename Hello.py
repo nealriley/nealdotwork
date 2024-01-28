@@ -13,10 +13,15 @@
 # limitations under the License.
 
 import streamlit as st
+import streamlit.components.v1 as components
+import markdown
 from streamlit.logger import get_logger
+from openai import OpenAI
+import os
+
+
 
 LOGGER = get_logger(__name__)
-
 
 def run():
     st.set_page_config(
@@ -24,6 +29,10 @@ def run():
         page_icon="random",
         layout="wide",
     )
+    # Store the generate prompt in a browser cache
+    if "generated_text" not in st.session_state:
+        st.session_state["generated_text"] = ""
+
     hide_decoration_bar_style = '''
         <style>
             header {visibility: hidden;}
@@ -40,7 +49,36 @@ def run():
           # attempt to read file from docs folder with the same name as page
           # if it doesn't exist, throw an error
           try:
-              st.markdown(open(f"docs/{page}.md").read())
+              markdown_doc=open(f"docs/{page}.md").read()
+              md = markdown.Markdown(extensions=['meta'])
+              converted=md.convert(markdown_doc) 
+              if "title" in md.Meta:
+                  st.title(md.Meta["title"][0])          
+                  st.markdown(converted, unsafe_allow_html=True)
+              if "prompt" in md.Meta:
+                
+                #   use request library to query with a json paylod of prompt, model (mistral) and stream: False
+                #   this will return a json response with the generated text
+                
+                st.session_state["prompt"] = md.Meta["prompt"][0]
+                if st.session_state["generated_text"] == "":
+                    with st.status("Generating Content..."):
+                        st.write("Loading LLM")
+                        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+                        st.write("Running against prompt: " + st.session_state["prompt"])
+                        chat_completion = client.chat.completions.create(
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": md.Meta["prompt"][0],
+                                }
+                            ],
+                            model="gpt-3.5-turbo",
+                        )
+                        st.session_state["prompt"]=""
+                        st.write("Extracting response...")
+                        st.session_state["generated_text"] = chat_completion.choices[0].message.content
+                st.markdown(st.session_state["generated_text"], unsafe_allow_html=True)
           except FileNotFoundError:
               st.error(f"404 - Page `{page}` not found")
           # Convert the page to an int, increment by one, and load the current url with a new query param (the new page id)
