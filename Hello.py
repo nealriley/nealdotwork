@@ -18,10 +18,22 @@ import markdown
 from streamlit.logger import get_logger
 from openai import OpenAI
 import os
-
-
+import re
 
 LOGGER = get_logger(__name__)
+
+
+def extract_prompts(text):
+    # Define a pattern to match text enclosed by double curly braces
+    pattern = re.compile(r'\{\{(.*?)\}\}')
+    
+    # Find all occurrences of the pattern
+    matches = re.findall(pattern, text)
+    
+    # Join the extracted text sections with newline characters
+    result = '\n\n'.join(matches)
+    
+    return result
 
 def run():
     st.set_page_config(
@@ -40,7 +52,6 @@ def run():
     '''
     st.markdown(hide_decoration_bar_style, unsafe_allow_html=True)
 
-
     # get query string param "page" from url
     page = st.query_params["page"] if "page" in st.query_params else "home"
     # confirm that query is not trying to change to any other folder except current one
@@ -53,8 +64,7 @@ def run():
               md = markdown.Markdown(extensions=['meta'])
               converted=md.convert(markdown_doc) 
               if "title" in md.Meta:
-                  st.title(md.Meta["title"][0])          
-                  st.markdown(converted, unsafe_allow_html=True)
+                  st.title(md.Meta["title"][0])                            
               if "prompt" in md.Meta:
                 
                 #   use request library to query with a json paylod of prompt, model (mistral) and stream: False
@@ -79,6 +89,30 @@ def run():
                         st.write("Extracting response...")
                         st.session_state["generated_text"] = chat_completion.choices[0].message.content
                 st.markdown(st.session_state["generated_text"], unsafe_allow_html=True)
+              if "{{" in converted:
+                  with st.status("Generating Content..."):
+                        st.write("Loading LLM")
+                        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+                        st.write("Prompts were found inline...\n\n" + extract_prompts(converted))
+                        chat_completion = client.chat.completions.create(
+                            messages=[
+                                {
+                                    "role": "system",
+                                    "content": "You are a helpful AI assistant that accepts prompts found in text in the form of \{\{THE PROMPT\}\}. Please follow the instructions in the  prompts found between double curly braces (\{\{ \}\}) and replace the text (and the curly braces) with the responses. Return text in the form of markdown only.",
+
+                                },
+                                {
+                                    "role": "user",
+                                    "content": converted,
+                                }
+                            ],
+                            model="gpt-4",
+                        )
+                        st.write("Collating text...")
+                        st.session_state["generated_text"] = chat_completion.choices[0].message.content
+                  st.markdown(st.session_state["generated_text"], unsafe_allow_html=True)
+              else: 
+                  st.markdown(converted, unsafe_allow_html=True)
           except FileNotFoundError:
               st.error(f"404 - Page `{page}` not found")
           # Convert the page to an int, increment by one, and load the current url with a new query param (the new page id)
